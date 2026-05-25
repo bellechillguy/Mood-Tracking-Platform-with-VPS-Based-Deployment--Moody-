@@ -1,5 +1,5 @@
 # Moody — Multi-stage Dockerfile
-FROM node:20-alpine AS /Users/nisrinaayz/Downloads/face-head-bandage.pngbase
+FROM node:20-alpine AS base
 WORKDIR /app
 
 # Install build dependencies for better-sqlite3
@@ -9,13 +9,18 @@ RUN apk add --no-cache python3 make g++
 COPY backend/package*.json ./backend/
 RUN cd backend && npm install --production
 
-# Copy application source
+# Copy application source (node_modules dari host diabaikan via .dockerignore)
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY .env* ./
 
+# Force rebuild native addons untuk Linux (fix: macOS-compiled binaries di node_modules)
+RUN cd backend && npm rebuild better-sqlite3
+
 # Create uploads directory
 RUN mkdir -p uploads
+# Create persistent data directory for the SQLite DB
+RUN mkdir -p /app/data
 
 # Expose app port
 EXPOSE 3000

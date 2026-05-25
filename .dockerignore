@@ -1,0 +1,23 @@
+# Ignore node_modules dari host - harus di-rebuild di dalam container
+backend/node_modules
+backend/node_modules/**
+node_modules
+node_modules/**
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+__MACOSX
+
+# env file (diisi dari docker-compose environment)
+.env
+.env.*
+
+# git
+.git
+.gitignore
+
+# SQLite DB dari lokal (pakai volume di production)
+backend/moody.db
+backend/moody.db-shm
+backend/moody.db-wal
