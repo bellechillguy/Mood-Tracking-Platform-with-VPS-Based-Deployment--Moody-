@@ -12,6 +12,7 @@ RUN cd backend && npm install --production
 # Copy application source (node_modules dari host diabaikan via .dockerignore)
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
+COPY uploads/ ./uploads/ 
 COPY .env* ./
 
 # Force rebuild native addons untuk Linux (fix: macOS-compiled binaries di node_modules)
