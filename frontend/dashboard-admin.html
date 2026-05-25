@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moody — Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Moody</div>
+      <div class="brand-sub">Superadmin</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Control Panel</div>
+      <div class="nav-item active" data-section="sec-overview">
+        <img src="/uploads/logo/overview.png" class="nav-icon-img" alt="Overview"> Overview
+      </div>
+      <div class="nav-item" data-section="sec-pending">
+        <img src="/uploads/logo/pending.png" class="nav-icon-img" alt="Pending"> Pending <span id="pending-badge" style="margin-left:auto;font-family:var(--font-m);font-size:11px;color:var(--gold);"></span>
+      </div>
+      <div class="nav-item" data-section="sec-users">
+        <img src="/uploads/logo/all-users-or-user-roles.png" class="nav-icon-img" alt="All Users"> All Users
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar-sm" id="sidebar-avatar"></div>
+        <div class="user-chip-info">
+          <div class="user-name" id="sidebar-name"></div>
+          <div class="user-role" id="sidebar-role"></div>
+        </div>
+      </div>
+      <div id="sidebar-quote" style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:12px;line-height:1.5;"></div>
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div id="sec-overview" class="dash-section">
+      <div class="page-header">
+        <h2>Platform Overview</h2>
+        <p>System health at a glance</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:28px;">
+        <div class="stat-card"><div class="card-label">Total Patients</div><div class="stat-val" id="st-users">—</div></div>
+        <div class="stat-card"><div class="card-label">Psychologists</div><div class="stat-val" id="st-psychs">—</div></div>
+        <div class="stat-card"><div class="card-label">Pending Approvals</div><div class="stat-val" id="st-pending" style="color:var(--gold)">—</div></div>
+        <div class="stat-card"><div class="card-label">Mood Entries</div><div class="stat-val" id="st-moods">—</div></div>
+        <div class="stat-card"><div class="card-label">Articles Published</div><div class="stat-val" id="st-content">—</div></div>
+        <div class="stat-card"><div class="card-label">Moods Logged Today</div><div class="stat-val" id="st-today">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px;">Platform Notes</div>
+        <p style="font-size:13px;line-height:1.8;color:var(--cream);">
+          <strong>Moody</strong> is a Health &amp; Wellbeing platform built for STEI-ITB students and their psychologists.
+          Superadmins review registration requests and manage access. Psychologists publish wellness content and monitor patient mood trends.
+          Patients log daily moods and interact with published resources.
+        </p>
+        <div class="divider"></div>
+        <p class="text-sm text-muted">
+          Backend: Node.js + Express · Database: SQLite (better-sqlite3) · Auth: JWT · Files: Multer · External API: ZenQuotes.io
+        </p>
+      </div>
+    </div>
+
+    <!-- PENDING APPROVALS -->
+    <div id="sec-pending" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Pending Approvals</h2>
+        <p>New registration requests awaiting review</p>
+      </div>
+      <div id="pending-list">
+        <div class="empty">No pending registrations.</div>
+      </div>
+    </div>
+
+    <!-- ALL USERS -->
+    <div id="sec-users" class="dash-section hidden">
+      <div class="page-header">
+        <h2>All Users</h2>
+        <p>Manage platform members</p>
+      </div>
+      <div class="card" style="overflow-x:auto">
+        <table class="table" id="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6" class="empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+API.requireAuth(['superadmin']);
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadStats(), loadPending(), loadUsers()]);
+});
+
+async function loadStats() {
+  try {
+    const s = await API.get('/admin/stats');
+    document.getElementById('st-users').textContent   = s.total_users;
+    document.getElementById('st-psychs').textContent  = s.total_psychologists;
+    document.getElementById('st-pending').textContent = s.pending_approvals;
+    document.getElementById('st-moods').textContent   = s.total_moods;
+    document.getElementById('st-content').textContent = s.total_content;
+    document.getElementById('st-today').textContent   = s.moods_today;
+    if (s.pending_approvals > 0) {
+      document.getElementById('pending-badge').textContent = s.pending_approvals;
+    }
+  } catch {}
+}
+
+async function loadPending() {
+  try {
+    const pending = await API.get('/admin/pending');
+    const el = document.getElementById('pending-list');
+    if (!pending.length) {
+      el.innerHTML = '<div class="empty">No pending registrations.</div>';
+      return;
+    }
+    el.innerHTML = pending.map(u => `
+      <div class="card anim-in" style="margin-bottom:14px;display:flex;align-items:center;gap:16px;">
+        <div class="avatar-sm" style="width:44px;height:44px;font-size:16px;flex-shrink:0;">
+          ${u.avatar_path ? `<img src="/uploads/${u.avatar_path}">` : (u.full_name||u.username||'?')[0].toUpperCase()}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:500;color:var(--cream);">${u.full_name || u.username}</div>
+          <div style="font-size:12px;color:var(--muted);">${u.email} · <span class="${u.role === 'psychologist' ? 'text-gold' : ''}">${u.role}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Registered ${fmtDate(u.created_at)}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-success btn-sm" onclick="setStatus(${u.id}, 1, this)">Approve</button>
+          <button class="btn btn-danger btn-sm"  onclick="setStatus(${u.id}, 2, this)">Reject</button>
+        </div>
+      </div>`).join('');
+  } catch {}
+}
+
+async function loadUsers() {
+  try {
+    const users = await API.get('/admin/users');
+    const tbody = document.getElementById('users-tbody');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">No users yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => {
+      const statusBadge = {0:'badge-pending',1:'badge-approved',2:'badge-rejected'}[u.approved] || '';
+      const statusLabel = {0:'Pending',1:'Approved',2:'Rejected'}[u.approved] || '—';
+      const roleBadge   = u.role === 'psychologist' ? 'badge-psych' : 'badge-user';
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="avatar-sm">
+                ${u.avatar_path ? `<img src="/uploads/${u.avatar_path}">` : (u.full_name||u.username||'?')[0].toUpperCase()}
+              </div>
+              <div>
+                <div style="color:var(--cream);font-size:13px;">${u.full_name || u.username}</div>
+                <div class="text-muted text-sm">@${u.username}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-muted">${u.email}</td>
+          <td><span class="badge ${roleBadge}">${u.role}</span></td>
+          <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+          <td class="text-muted">${fmtDate(u.created_at)}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              ${u.approved !== 1 ? `<button class="btn btn-success btn-sm" onclick="setStatus(${u.id},1,this)">Approve</button>` : ''}
+              ${u.approved !== 2 ? `<button class="btn btn-ghost btn-sm" onclick="setStatus(${u.id},2,this)">Reject</button>` : ''}
+              <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},this)">Remove</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch {}
+}
+
+async function setStatus(id, status, btn) {
+  btn.disabled = true;
+  try {
+    const r = await API.patch(`/admin/users/${id}/status`, { status });
+    toast(r.message, 'ok');
+    await Promise.all([loadStats(), loadPending(), loadUsers()]);
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; }
+}
+
+async function deleteUser(id, btn) {
+  if (!confirm('Permanently remove this user?')) return;
+  btn.disabled = true;
+  try {
+    await API.delete(`/admin/users/${id}`);
+    toast('User removed', '');
+    await Promise.all([loadStats(), loadUsers()]);
+  } catch(e) { toast(e.message, 'error'); btn.disabled = false; }
+}
+</script>
+</body>
+</html>

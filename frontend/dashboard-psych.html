@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moody — Psychologist Workspace</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- Patient detail modal -->
+<div class="modal-overlay" id="patient-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3 id="modal-patient-name">Patient</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Moody</div>
+      <div class="brand-sub">Psychologist</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <div class="nav-item active" data-section="sec-patients">
+        <img src="/uploads/logo/patients.png" class="nav-icon-img" alt="Patients"> Patients
+      </div>
+      <div class="nav-item" data-section="sec-publish">
+        <img src="/uploads/logo/publish.png" class="nav-icon-img" alt="Publish"> Publish
+      </div>
+      <div class="nav-item" data-section="sec-my-content">
+        <img src="/uploads/logo/journal-entries.png" class="nav-icon-img" alt="My Articles"> My Articles
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar-sm" id="sidebar-avatar"></div>
+        <div class="user-chip-info">
+          <div class="user-name" id="sidebar-name"></div>
+          <div class="user-role" id="sidebar-role"></div>
+        </div>
+      </div>
+      <div id="sidebar-quote" style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:12px;line-height:1.5;"></div>
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- PATIENTS OVERVIEW -->
+    <div id="sec-patients" class="dash-section">
+      <div class="page-header">
+        <h2>Patient Overview</h2>
+        <p>Approved patients and their latest mood data</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:28px;">
+        <div class="stat-card"><div class="card-label">Total Patients</div><div class="stat-val" id="p-total">—</div></div>
+        <div class="stat-card"><div class="card-label">Active Today</div><div class="stat-val" id="p-today">—</div></div>
+        <div class="stat-card"><div class="card-label">Avg Mood (all)</div><div class="stat-val" id="p-avg">—</div></div>
+        <div class="stat-card"><div class="card-label">At-Risk</div><div class="stat-val" id="p-risk" style="color:var(--danger)">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-hdr">
+          <span class="section-title">All Patients</span>
+          <input id="patient-search" class="form-input" style="width:200px" placeholder="Search name…">
+        </div>
+        <div id="patient-list"><div class="empty">No patients yet.</div></div>
+      </div>
+    </div>
+
+    <!-- PUBLISH CONTENT -->
+    <div id="sec-publish" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Publish Article</h2>
+        <p>Share wellness resources and guidance with patients</p>
+      </div>
+
+      <div class="card" style="max-width:680px;">
+        <form id="publish-form">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input id="c-title" class="form-input" placeholder="Article title" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="c-cat" class="form-select">
+              <option value="general">General Wellness</option>
+              <option value="anxiety">Anxiety</option>
+              <option value="depression">Depression</option>
+              <option value="burnout">Burnout</option>
+              <option value="mindfulness">Mindfulness</option>
+              <option value="sleep">Sleep</option>
+              <option value="motivation">Motivation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Body</label>
+            <textarea id="c-body" class="form-textarea" style="min-height:200px" placeholder="Write your article…" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Attachment (image / video / PDF / GIF)</label>
+            <label class="form-file-label">
+              <input type="file" id="c-file" accept="image/*,video/*,application/pdf,.gif">
+              <span id="c-file-name">Attach a file</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Publish Article</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MY CONTENT -->
+    <div id="sec-my-content" class="dash-section hidden">
+      <div class="page-header">
+        <h2>My Articles</h2>
+        <p>Content you've published</p>
+      </div>
+      <div id="my-content-list"><div class="empty">No articles yet.</div></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+API.requireAuth(['psychologist']);
+
+let patients = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadPatients(), loadMyContent()]);
+
+  document.getElementById('c-file').addEventListener('change', e => {
+    document.getElementById('c-file-name').textContent =
+      e.target.files[0] ? e.target.files[0].name : 'Attach a file';
+  });
+
+  document.getElementById('patient-search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    renderPatients(patients.filter(p =>
+      (p.full_name||p.username).toLowerCase().includes(q)
+    ));
+  });
+
+  document.getElementById('publish-form').addEventListener('submit', publishContent);
+});
+
+async function loadPatients() {
+  try {
+    patients = await API.get('/moods/patients');
+    const today = new Date().toISOString().split('T')[0];
+    const todayCount = patients.filter(p => p.last_entry === today).length;
+    const avgAll = patients.length
+      ? (patients.reduce((s,p) => s+(p.avg_mood||0), 0)/patients.length).toFixed(1)
+      : '—';
+    const atRisk = patients.filter(p => p.avg_mood && p.avg_mood < 2.5).length;
+
+    document.getElementById('p-total').textContent = patients.length;
+    document.getElementById('p-today').textContent = todayCount;
+    document.getElementById('p-avg').textContent   = avgAll;
+    document.getElementById('p-risk').textContent  = atRisk;
+    renderPatients(patients);
+  } catch {}
+}
+
+function renderPatients(list) {
+  const el = document.getElementById('patient-list');
+  if (!list.length) { el.innerHTML = '<div class="empty">No patients found.</div>'; return; }
+  const moodImages = { 1: 'devastated.png', 2: 'heavy.png', 3: 'okay.png', 4: 'good.png', 5: 'awesome.png' };
+  el.innerHTML = list.map(p => {
+    const moodCl = moodColor(p.latest_mood);
+    const riskBadge = (p.avg_mood && p.avg_mood < 2.5)
+      ? `<span class="badge badge-rejected" style="margin-left:8px;">at risk</span>` : '';
+    return `
+      <div class="patient-row" onclick="openPatient(${p.id})">
+        <div class="avatar-sm">
+          ${p.avatar_path ? `<img src="/uploads/${p.avatar_path}">` : (p.full_name||p.username||'?')[0].toUpperCase()}
+        </div>
+        <div class="patient-info">
+          <div class="p-name">${p.full_name || p.username} ${riskBadge}</div>
+          <div class="p-meta">${p.total_entries} entries · avg ${p.avg_mood || '—'} · last ${fmtShort(p.last_entry)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <img src="/uploads/logo/${moodImages[p.latest_mood] || 'okay.png'}" style="width:36px;height:36px;object-fit:contain;">
+          <div class="p-label">${p.latest_label || 'no data'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openPatient(id) {
+  const modal = document.getElementById('patient-modal');
+  const body  = document.getElementById('modal-body');
+  body.innerHTML = '<div class="empty">Loading…</div>';
+  modal.classList.add('open');
+
+  try {
+    const d = await API.get(`/moods/patient/${id}`);
+    document.getElementById('modal-patient-name').textContent = d.patient.full_name || d.patient.username;
+
+    const last7 = d.entries.slice(0,7).reverse();
+    const chartHtml = `
+      <div class="card-label" style="margin-bottom:8px">Last 7 entries</div>
+      <div class="mini-chart" style="margin-bottom:18px">${last7.map(e => `
+        <div class="mini-bar-wrap">
+          <div class="mini-bar ${moodColor(e.mood_score)}" style="height:${(e.mood_score/5)*100}%;opacity:.75"></div>
+          <span class="mini-bar-dt">${fmtShort(e.date).split(' ')[0]}</span>
+        </div>`).join('')}</div>`;
+
+    const moodImages = { 1: 'devastated.png', 2: 'heavy.png', 3: 'okay.png', 4: 'good.png', 5: 'awesome.png' };
+    const entriesHtml = d.entries.slice(0,20).map(e => `
+      <div class="entry-row">
+        <span class="entry-date">${fmtDate(e.date)}</span>
+        <img src="/uploads/logo/${moodImages[e.mood_score] || 'okay.png'}" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;">
+        <span class="entry-label">${e.mood_label}</span>
+        <span class="entry-text">${e.journal || '<span class="text-muted">—</span>'}</span>
+      </div>`).join('');
+
+    body.innerHTML = `
+      <div style="display:flex;gap:20px;margin-bottom:20px;">
+        <div class="stat-card" style="flex:1"><div class="card-label">Avg Mood</div><div class="stat-val">${d.agg.avg_mood||'—'}</div></div>
+        <div class="stat-card" style="flex:1"><div class="card-label">Total Entries</div><div class="stat-val">${d.agg.total||0}</div></div>
+      </div>
+      ${chartHtml}
+      <div class="card-label" style="margin-bottom:8px">Journal history</div>
+      ${entriesHtml || '<div class="empty">No entries yet.</div>'}`;
+  } catch(e) {
+    body.innerHTML = `<div class="empty">${e.message}</div>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('patient-modal').classList.remove('open');
+}
+document.getElementById('patient-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('patient-modal')) closeModal();
+});
+
+async function publishContent(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Publishing…';
+
+  const form = new FormData();
+  form.append('title',    document.getElementById('c-title').value.trim());
+  form.append('body',     document.getElementById('c-body').value.trim());
+  form.append('category', document.getElementById('c-cat').value);
+  const file = document.getElementById('c-file').files[0];
+  if (file) form.append('file', file);
+
+  try {
+    await API.postForm('/content', form);
+    toast('Article published ✦', 'ok');
+    e.target.reset();
+    document.getElementById('c-file-name').textContent = 'Attach a file';
+    await loadMyContent();
+  } catch(err) { toast(err.message, 'error'); }
+
+  btn.disabled = false; btn.textContent = 'Publish Article';
+}
+
+async function loadMyContent() {
+  try {
+    const content = await API.get('/content/mine');
+    const el = document.getElementById('my-content-list');
+    if (!content.length) { el.innerHTML = '<div class="empty">No articles published yet.</div>'; return; }
+    el.innerHTML = content.map(c => `
+      <div class="content-card anim-in">
+        <div class="content-meta">
+          <div class="c-cat">${c.category}</div>
+          <div class="c-author" style="margin-left:auto">${fmtShort(c.created_at)}</div>
+        </div>
+        <h3>${c.title}</h3>
+        <p class="content-body">${c.body.length > 200 ? c.body.slice(0,200)+'…' : c.body}</p>
+        <div class="content-actions">
+          <span style="font-size:11px;color:var(--muted)">◈ ${c.save_count} saves</span>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteContent(${c.id}, this)">Delete</button>
+        </div>
+      </div>`).join('');
+  } catch {}
+}
+
+async function deleteContent(id, btn) {
+  if (!confirm('Delete this article?')) return;
+  try {
+    await API.delete(`/content/${id}`);
+    toast('Article deleted', '');
+    await loadMyContent();
+  } catch(e) { toast(e.message, 'error'); }
+}
+</script>
+</body>
+</html>

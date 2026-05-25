@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moody — Health & Wellbeing</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { overflow: hidden; }
+
+    .auth-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      min-height: 100vh;
+    }
+
+    .auth-left {
+      position: relative;
+
+      background:
+        radial-gradient(circle at top left,
+          rgba(255, 214, 230, 0.45),
+          transparent 32%),
+
+        radial-gradient(circle at top right,
+          rgba(196, 181, 253, 0.35),
+          transparent 35%),
+
+        radial-gradient(circle at bottom left,
+          rgba(191, 219, 254, 0.38),
+          transparent 36%),
+
+        radial-gradient(circle at bottom right,
+          rgba(220, 252, 231, 0.35),
+          transparent 34%),
+
+        linear-gradient(
+          135deg,
+          #fffafc 0%,
+          #f8fbff 30%,
+          #f9f5ff 65%,
+          #f7fff9 100%
+        );
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 52px 60px;
+      overflow: hidden;
+    }
+
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(212,169,110,.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 20%, rgba(173,107,92,.04) 0%, transparent 70%);
+        display: none;
+    }
+
+    .auth-brand {
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-brand-logo {
+      font-family: var(--font-d);
+      font-size: 1.4rem;
+      color: var(--purple-text);
+      letter-spacing: -.02em;
+    }
+
+    .auth-hero {
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-tagline {
+      font-family: var(--font-d);
+      font-size: clamp(2.6rem, 4vw, 4.2rem);
+      font-weight: 400;
+      color: #0f172a;
+      line-height: 1.08;
+      letter-spacing: -.03em;
+      margin-bottom: 24px;
+    }
+
+    .auth-tagline em {
+      font-style: italic;
+      color: var(--purple-text);
+    }
+
+    .auth-tagline-sub {
+      font-size: 14px;
+      color: #64748b;
+      max-width: 400px;
+      line-height: 1.8;
+    }
+
+    .auth-foot {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 32px;
+    }
+
+    .auth-foot-stat { 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-icon-num {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .auth-stat-icon { 
+      width: 32px; 
+      height: 32px; 
+      object-fit: contain; 
+      opacity: 0.9; 
+      transition: opacity var(--ease); 
+    }
+    .auth-foot-stat:hover .auth-stat-icon { 
+      opacity: 1; 
+    }
+    .auth-foot-stat .n {
+      font-family: var(--font-m);
+      font-size: 1.3rem;
+      color: var(--purple-accent);
+      line-height: 1;
+      font-weight: 600;
+    }
+    .auth-foot-stat .l {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Right auth panel */
+    .auth-right {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .auth-form-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 40px;
+    }
+
+    .auth-form-hdr {
+      margin-bottom: 32px;
+    }
+
+    .auth-form-hdr h2 {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+
+    .auth-form-hdr p {
+      font-size: 13px;
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      font-family: var(--font-b);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all var(--ease);
+    }
+
+    .auth-tab.active {
+      color: var(--purple-text);
+      border-bottom-color: var(--purple-text);
+    }
+
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    .auth-msg {
+      font-size: 12px;
+      padding: 10px 14px;
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      min-height: 0;
+      display: none;
+    }
+    .auth-msg.ok    { display: block; background: var(--success-bg); color: var(--success); border: 1px solid rgba(94,158,122,.2); }
+    .auth-msg.error { display: block; background: var(--danger-bg);  color: var(--danger);  border: 1px solid rgba(194,74,74,.2); }
+
+    .auth-divider {
+      text-align: center;
+      margin: 20px 0;
+      position: relative;
+    }
+    .auth-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .auth-divider span {
+      position: relative;
+      background: var(--surface);
+      padding: 0 12px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .auth-foot-note {
+      padding: 20px 40px 28px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Decorative line art */
+    .auth-deco {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 240px;
+      background: linear-gradient(to bottom, transparent, var(--border-md), transparent);
+    }
+
+    @media (max-width: 768px) {
+      body { overflow: auto; }
+      .auth-layout { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .auth-right { border-left: none; }
+      .auth-form-wrap { padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+<div class="auth-layout">
+
+  <!-- Left: Editorial brand panel -->
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">Moody</div>
+    </div>
+
+    <div class="auth-hero">
+      <h1 class="auth-tagline">
+        How are you<br>
+        <em>feeling</em><br>
+        today?
+      </h1>
+      <p class="auth-tagline-sub">
+        A private space to track your mood, reflect on your day,
+        and stay connected with the people who care about your wellbeing.
+      </p>
+    </div>
+
+    <div class="auth-foot">
+      <div class="auth-foot-stat">
+        <div class="stat-icon-num">
+          <img src="/uploads/logo/mood-levels.png" class="auth-stat-icon" alt="Mood levels">
+          <div class="n">5</div>
+        </div>
+        <div class="l">Mood levels</div>
+      </div>
+      <div class="auth-foot-stat">
+        <div class="stat-icon-num">
+          <img src="/uploads/logo/all-users-or-user-roles.png" class="auth-stat-icon" alt="User roles">
+          <div class="n">3</div>
+        </div>
+        <div class="l">User roles</div>
+      </div>
+      <div class="auth-foot-stat">
+        <div class="stat-icon-num">
+          <img src="/uploads/logo/journal-entries.png" class="auth-stat-icon" alt="Journal entries">
+          <div class="n">∞</div>
+        </div>
+        <div class="l">Journal entries</div>
+      </div>
+    </div>
+    <div class="auth-deco"></div>
+  </div>
+
+  <!-- Right: Auth form panel -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-hdr">
+        <h2>Welcome back</h2>
+        <p>Sign in to your Moody account</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-panel="panel-login">Sign In</button>
+        <button class="auth-tab" data-panel="panel-register">Request Access</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-panel active" id="panel-login">
+        <div class="auth-msg" id="login-msg"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input id="l-email" type="email" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input id="l-pass" type="password" class="form-input" placeholder="Your password" required>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+          </div>
+        </form>
+        <div class="auth-divider"><span>Superadmin</span></div>
+        <p class="text-sm text-muted" style="text-align:center">
+          admin@moody.stei.cloud &nbsp;/&nbsp; admin123
+        </p>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="auth-panel" id="panel-register">
+        <div class="auth-msg" id="register-msg"></div>
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input id="r-name" type="text" class="form-input" placeholder="Your full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input id="r-username" type="text" class="form-input" placeholder="username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input id="r-email" type="email" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input id="r-pass" type="password" class="form-input" placeholder="Min. 8 characters" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Register as</label>
+            <select id="r-role" class="form-select">
+              <option value="user">Patient / Student</option>
+              <option value="psychologist">Psychologist / Counselor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profile Photo (optional)</label>
+            <label class="form-file-label">
+              <input type="file" id="r-avatar" accept="image/*">
+              <span id="avatar-name">Upload profile photo</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Request Access</button>
+        </form>
+        <p class="text-sm text-muted mt-2" style="text-align:center">
+          Your account will be reviewed by the admin.
+        </p>
+      </div>
+    </div>
+
+    <div class="auth-foot-note">
+      Moody &mdash; Health &amp; Wellbeing Platform &middot; STEI-ITB
+    </div>
+  </div>
+
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>

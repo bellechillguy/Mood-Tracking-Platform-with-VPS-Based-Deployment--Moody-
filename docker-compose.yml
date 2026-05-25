@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  moody:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moody-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist SQLite database and uploaded files outside the container
+      - moody-db:/app/backend/moody.db
+      - moody-uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-moody_change_this_in_production}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/quote"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  moody-db:
+    driver: local
+  moody-uploads:
+    driver: local
+
+networks:
+  default:
+    name: moody-network

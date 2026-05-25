@@ -1,14 +1,10 @@
 {
-  "name": "moody-backend",
+  "name": "moody",
   "version": "1.0.0",
-  "description": "Minimalist backend for Moody app",
-  "main": "server.js",
+  "description": "Moody — Health & Wellbeing Platform",
   "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "sqlite3": "^5.1.6",
-    "cors": "^2.8.5"
+    "start": "cd backend && node server.js",
+    "install:backend": "cd backend && npm install",
+    "dev": "cd backend && npm run dev"
   }
 }

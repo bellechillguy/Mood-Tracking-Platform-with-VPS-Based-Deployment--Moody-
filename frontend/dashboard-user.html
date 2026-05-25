@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moody — My Journal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Moody</div>
+      <div class="brand-sub">Health &amp; Wellbeing</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Journal</div>
+      <div class="nav-item active" data-section="sec-today">
+        <img src="/uploads/logo/calendar.png" class="nav-icon-img" alt="Today"> Today
+      </div>
+      <div class="nav-item" data-section="sec-history">
+        <img src="/uploads/logo/history.png" class="nav-icon-img" alt="History"> History
+      </div>
+      <div class="nav-item" data-section="sec-insights">
+        <img src="/uploads/logo/insight.png" class="nav-icon-img" alt="Insights"> Insights
+      </div>
+      <div class="nav-section-label">Wellness</div>
+      <div class="nav-item" data-section="sec-content">
+        <img src="/uploads/logo/article.png" class="nav-icon-img" alt="Articles"> Articles
+      </div>
+      <div class="nav-item" data-section="sec-saved">
+        <img src="/uploads/logo/saved.png" class="nav-icon-img" alt="Saved"> Saved
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar-sm" id="sidebar-avatar"></div>
+        <div class="user-chip-info">
+          <div class="user-name" id="sidebar-name"></div>
+          <div class="user-role" id="sidebar-role"></div>
+        </div>
+      </div>
+      <div id="sidebar-quote" style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:12px;line-height:1.5;"></div>
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- TODAY: Mood Logging -->
+    <div id="sec-today" class="dash-section">
+      <div class="page-header">
+        <h2>Today's Entry</h2>
+        <p id="today-date"></p>
+      </div>
+
+      <div class="grid-2" style="gap:28px; align-items:start;">
+        <!-- Log Mood Form -->
+        <div>
+          <div class="card">
+            <div class="card-label">How are you feeling?</div>
+            <div class="mood-scale" id="mood-btns">
+              <div class="mood-btn" data-v="1">
+                <img src="/uploads/logo/devastated.png" class="mood-icon" alt="Devastated">
+                <span class="m-label">Devastated</span>
+              </div>
+              <div class="mood-btn" data-v="2">
+                <img src="/uploads/logo/heavy.png" class="mood-icon" alt="Heavy">
+                <span class="m-label">Heavy</span>
+              </div>
+              <div class="mood-btn" data-v="3">
+                <img src="/uploads/logo/okay.png" class="mood-icon" alt="Okay">
+                <span class="m-label">Okay</span>
+              </div>
+              <div class="mood-btn" data-v="4">
+                <img src="/uploads/logo/good.png" class="mood-icon" alt="Good">
+                <span class="m-label">Good</span>
+              </div>
+              <div class="mood-btn" data-v="5">
+                <img src="/uploads/logo/awesome.png" class="mood-icon" alt="Awesome">
+                <span class="m-label">Awesome</span>
+              </div>
+            </div>
+
+            <div class="form-group mt-2">
+              <label class="form-label">Journal entry</label>
+              <textarea id="journal-input" class="form-textarea" placeholder="Write freely — this is your private space…"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Attach an image (optional)</label>
+              <label class="form-file-label">
+                <input type="file" id="mood-img" accept="image/*">
+                <span id="mood-img-name">Choose photo or GIF</span>
+              </label>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="log-btn">Log Today's Mood</button>
+          </div>
+        </div>
+
+        <!-- Today's stats at a glance -->
+        <div>
+          <div class="card" id="today-card" style="margin-bottom:16px;">
+            <div class="card-label">Today's log</div>
+            <div id="today-display" style="color:var(--muted);font-size:13px;padding:12px 0;">No entry yet today.</div>
+          </div>
+          <div class="card" id="streak-card">
+            <div class="card-label">Current streak</div>
+            <div class="stat-val" id="streak-val">—</div>
+            <div class="stat-lbl">consecutive days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="sec-history" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Mood History</h2>
+        <p>Your last 90 entries</p>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-label">Last 14 days</div>
+        <div class="mini-chart" id="history-chart" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="card">
+        <div id="history-list"><div class="empty">No entries yet.</div></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div id="sec-insights" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Insights</h2>
+        <p>Pattern analysis from your journal data</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:28px;" id="stats-grid">
+        <div class="stat-card"><div class="card-label">Avg Mood</div><div class="stat-val" id="st-avg">—</div></div>
+        <div class="stat-card"><div class="card-label">Total Entries</div><div class="stat-val" id="st-total">—</div></div>
+        <div class="stat-card"><div class="card-label">Best</div><div class="stat-val" id="st-high">—</div></div>
+        <div class="stat-card"><div class="card-label">Lowest</div><div class="stat-val" id="st-low">—</div></div>
+      </div>
+
+      <div id="insight-banner" class="section"></div>
+
+      <div class="card">
+        <div class="card-label">Mood distribution</div>
+        <div id="dist-chart" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+    <!-- ARTICLES (all content from psychologists) -->
+    <div id="sec-content" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Wellness Articles</h2>
+        <p>Published by your psychologists and counselors</p>
+      </div>
+      <div id="content-list"><div class="empty">No articles yet.</div></div>
+    </div>
+
+    <!-- SAVED -->
+    <div id="sec-saved" class="dash-section hidden">
+      <div class="page-header">
+        <h2>Saved Articles</h2>
+        <p>Content you've bookmarked</p>
+      </div>
+      <div id="saved-list"><div class="empty">Nothing saved yet.</div></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+// Guard
+const _user = API.requireAuth(['user']);
+if (!_user) { /* redirect handled */ }
+
+// State
+let selectedMood = null;
+let allEntries = [];
+let allContent = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Mood button select
+  document.querySelectorAll('.mood-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      selectedMood = parseInt(btn.dataset.v);
+    });
+  });
+
+  // Image name
+  document.getElementById('mood-img').addEventListener('change', e => {
+    document.getElementById('mood-img-name').textContent =
+      e.target.files[0] ? e.target.files[0].name : 'Choose photo or GIF';
+  });
+
+  // Log button
+  document.getElementById('log-btn').addEventListener('click', logMood);
+
+  // Initial load
+  await Promise.all([loadEntries(), loadStats(), loadContent()]);
+});
+
+async function loadEntries() {
+  try {
+    allEntries = await API.get('/moods');
+    renderTodayCard();
+    renderHistoryChart();
+    renderHistoryList();
+    calcStreak();
+  } catch {}
+}
+
+async function loadStats() {
+  try {
+    const s = await API.get('/moods/stats');
+    document.getElementById('st-avg').textContent   = s.stats?.avg_mood ?? '—';
+    document.getElementById('st-total').textContent = s.stats?.total_entries ?? 0;
+    document.getElementById('st-high').textContent  = s.stats?.highest ?? '—';
+    document.getElementById('st-low').textContent   = s.stats?.lowest ?? '—';
+    if (s.insight) {
+      document.getElementById('insight-banner').innerHTML = `
+        <div class="insight-banner insight-${s.insight.type}">
+          <strong>${s.insight.type === 'concern' ? '⚠ Low mood pattern' : s.insight.type === 'positive' ? '✦ Bright streak' : '◉ Balanced'}</strong><br>
+          ${s.insight.text}
+        </div>`;
+    }
+    renderDistChart(s.distribution || []);
+  } catch {}
+}
+
+async function loadContent() {
+  try {
+    allContent = await API.get('/content');
+    renderContent(allContent, 'content-list', false);
+    renderContent(allContent.filter(c => c.saved_by_me), 'saved-list', false);
+  } catch {}
+}
+
+async function logMood() {
+  if (!selectedMood) { toast('Select a mood level first', 'error'); return; }
+  const btn = document.getElementById('log-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const form = new FormData();
+  form.append('mood_score', selectedMood);
+  form.append('journal', document.getElementById('journal-input').value.trim());
+  const img = document.getElementById('mood-img').files[0];
+  if (img) form.append('image', img);
+
+  try {
+    await API.postForm('/moods', form);
+    toast('Mood logged ✦', 'ok');
+    document.getElementById('journal-input').value = '';
+    document.getElementById('mood-img').value = '';
+    document.getElementById('mood-img-name').textContent = 'Choose photo or GIF';
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('sel'));
+    selectedMood = null;
+    await Promise.all([loadEntries(), loadStats()]);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Log Today\'s Mood';
+}
+
+function renderTodayCard() {
+  const today = new Date().toISOString().split('T')[0];
+  const entry = allEntries.find(e => e.date === today);
+  const el = document.getElementById('today-display');
+  if (entry) {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <span class="stat-val ${moodColor(entry.mood_score)}" style="font-size:2.5rem;line-height:1">${entry.mood_score}</span>
+        <div>
+          <div style="font-size:14px;color:var(--cream)">${entry.mood_label}</div>
+          <div class="text-muted text-sm">logged today</div>
+        </div>
+      </div>
+      ${entry.journal ? `<p style="font-size:13px;color:var(--cream-dim);font-style:italic;">"${entry.journal}"</p>` : ''}
+      ${entry.image_path ? `<img src="/uploads/${entry.image_path}" style="max-width:100%;margin-top:10px;border-radius:var(--r-md);opacity:.85">` : ''}`;
+  } else {
+    el.textContent = 'No entry yet today.';
+  }
+}
+
+function calcStreak() {
+  const dates = allEntries.map(e => e.date).sort().reverse();
+  let streak = 0, d = new Date();
+  for (let i = 0; i < 365; i++) {
+    const s = d.toISOString().split('T')[0];
+    if (dates.includes(s)) { streak++; d.setDate(d.getDate()-1); }
+    else if (i === 0) { d.setDate(d.getDate()-1); }
+    else break;
+  }
+  document.getElementById('streak-val').textContent = streak;
+}
+
+function renderHistoryChart() {
+  const last14 = allEntries.slice(0,14).reverse();
+  const el = document.getElementById('history-chart');
+  if (!last14.length) { el.innerHTML = '<div class="empty" style="padding:16px">No data yet</div>'; return; }
+  el.innerHTML = last14.map(e => `
+    <div class="mini-bar-wrap">
+      <div class="mini-bar ${moodColor(e.mood_score)}" style="height:${(e.mood_score/5)*100}%;opacity:.7"></div>
+      <span class="mini-bar-dt">${fmtShort(e.date).split(' ')[0]}</span>
+    </div>`).join('');
+}
+
+function renderHistoryList() {
+  const el = document.getElementById('history-list');
+  if (!allEntries.length) { el.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
+  const moodImages = { 1: 'devastated.png', 2: 'heavy.png', 3: 'okay.png', 4: 'good.png', 5: 'awesome.png' };
+  el.innerHTML = allEntries.map(e => `
+    <div class="entry-row">
+      <span class="entry-date">${fmtDate(e.date)}</span>
+      <img src="/uploads/logo/${moodImages[e.mood_score] || 'okay.png'}" style="width:32px;height:32px;object-fit:contain;flex-shrink:0">
+      <span class="entry-label">${e.mood_label}</span>
+      <span class="entry-text">${e.journal || '<span class="text-muted">—</span>'}</span>
+      ${e.image_path ? `<img src="/uploads/${e.image_path}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;flex-shrink:0">` : ''}
+    </div>`).join('');
+}
+
+function renderDistChart(dist) {
+  const el = document.getElementById('dist-chart');
+  const labels = ['','Devastated','Heavy','Okay','Good','Awesome'];
+  const max = Math.max(...dist.map(d => d.count), 1);
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">` +
+    [1,2,3,4,5].map(v => {
+      const item = dist.find(d => d.mood_score === v) || { count: 0 };
+      const pct = Math.round((item.count/max)*100);
+      return `<div style="display:flex;align-items:center;gap:12px;">
+        <span class="text-sm ${moodColor(v)}" style="min-width:80px;">${labels[v]}</span>
+        <div style="flex:1;background:var(--surface);border-radius:2px;height:8px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--gold);opacity:.6;border-radius:2px;transition:width .6s ease;"></div>
+        </div>
+        <span class="text-muted text-sm" style="min-width:28px;text-align:right;">${item.count}</span>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+function renderContent(items, containerId, savedOnly) {
+  const el = document.getElementById(containerId);
+  if (!items.length) { el.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+  el.innerHTML = items.map(c => `
+    <div class="content-card anim-in">
+      <div class="content-meta">
+        <div class="c-cat">${c.category}</div>
+        <div class="c-author">By ${c.author_fullname || c.author_name}</div>
+        <div class="c-author" style="margin-left:auto">${fmtShort(c.created_at)}</div>
+      </div>
+      <h3>${c.title}</h3>
+      <p class="content-body">${c.body.length > 240 ? c.body.slice(0,240)+'…' : c.body}</p>
+      ${c.file_path ? `<div style="margin-top:10px">${renderAttachment(c)}</div>` : ''}
+      <div class="content-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSave(${c.id}, this, '${containerId}')">
+          ${c.saved_by_me ? '◈ Saved' : '◇ Save'}
+        </button>
+        <span class="save-count">${c.save_count} saves</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderAttachment(c) {
+  if (c.file_type && c.file_type.startsWith('image')) {
+    return `<img src="/uploads/${c.file_path}" style="max-width:100%;border-radius:var(--r-md);opacity:.85">`;
+  }
+  if (c.file_type && c.file_type.startsWith('video')) {
+    return `<video src="/uploads/${c.file_path}" controls style="max-width:100%;border-radius:var(--r-md)"></video>`;
+  }
+  return `<a href="/uploads/${c.file_path}" class="btn btn-ghost btn-sm" target="_blank">↓ Download attachment</a>`;
+}
+
+async function toggleSave(id, btn, containerId) {
+  try {
+    const r = await API.post(`/content/${id}/save`, {});
+    toast(r.saved ? 'Saved ◈' : 'Removed from saved', r.saved ? 'ok' : '');
+    btn.textContent = r.saved ? '◈ Saved' : '◇ Save';
+    await loadContent();
+  } catch (e) { toast(e.message, 'error'); }
+}
+</script>
+</body>
+</html>
