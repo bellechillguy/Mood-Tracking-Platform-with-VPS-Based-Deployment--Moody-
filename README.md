@@ -204,7 +204,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-For support, email support@moody.local or open an issue on GitHub.
+For support, open an issue on GitHub.
 
 ## Acknowledgments
 
