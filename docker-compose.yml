@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   moody:
     build:
@@ -11,7 +9,8 @@ services:
       - "3000:3000"
     volumes:
       # Persist SQLite database and uploaded files outside the container
-      - moody-db:/app/backend/moody.db
+      # store DB in a separate data folder so we don't override /app/backend
+      - moody-db:/app/data
       - moody-uploads:/app/uploads
     environment:
       - NODE_ENV=production

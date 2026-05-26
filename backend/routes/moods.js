@@ -7,7 +7,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
-const MOOD_LABELS = ['', 'Devastated', 'Heavy', 'Okay', 'Good', 'Luminous'];
+const MOOD_LABELS = ['', 'Devastated', 'Heavy', 'Okay', 'Good', 'Awesome'];
 
 const moodUpload = multer({
   storage: multer.diskStorage({

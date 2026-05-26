@@ -3,7 +3,9 @@ const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
-const db = new Database(path.join(__dirname, 'moody.db'));
+// store DB in /app/data so it can be mounted as a volume without hiding
+// the backend folder (which would hide node_modules inside the container)
+const db = new Database(path.join('/app/data', 'moody.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
