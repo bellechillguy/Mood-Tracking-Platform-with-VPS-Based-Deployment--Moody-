@@ -2,6 +2,8 @@
 
 A comprehensive mood tracking platform designed for mental health and wellbeing management with integrated psychological insights and VPS-based deployment capabilities.
 
+<img width="1118" height="624" alt="Image" src="https://github.com/user-attachments/assets/bace1b67-1c3c-4121-b88d-11cd5b72a09a" />
+
 ## Features
 
 - **Mood Tracking**: Track daily moods with detailed insights
